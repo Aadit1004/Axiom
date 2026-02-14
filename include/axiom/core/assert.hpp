@@ -1,0 +1,4 @@
+#ifndef AXIOM_ASSERT_HPP
+#define AXIOM_ASSERT_HPP
+
+#endif //AXIOM_ASSERT_HPP

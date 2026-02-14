@@ -1,0 +1,4 @@
+#ifndef AXIOM_PRINT_HPP
+#define AXIOM_PRINT_HPP
+
+#endif //AXIOM_PRINT_HPP
