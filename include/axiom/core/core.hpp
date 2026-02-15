@@ -1,7 +1,6 @@
 #ifndef AXIOM_CORE_HPP
 #define AXIOM_CORE_HPP
 
-#include <algorithm>
 #include <limits>
 #include <string>
 
