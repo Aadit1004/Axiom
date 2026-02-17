@@ -3,7 +3,7 @@ project(Axiom LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-
+target_compile_definitions(axiom PUBLIC AXIOM_ENABLE_ASSERTS=1)
 
 add_library(axiom STATIC src/axiom/axiom.cpp)
 

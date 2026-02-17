@@ -9,14 +9,39 @@
 namespace axiom::linalg {
     template <typename T>
     class Vec {
+        // vector data is represented by nx1
         std::vector<T> data_;
+
+        static void validate_dims(const core::index n) {
+            if (n == 0) throw core::Error(core::ErrorCode::kInvalidArgument,
+               "Vec(n): vector size must be >= 1");
+        }
+
+        static std::vector<T> make_vec(const core::index n, T value = T{}) {
+            validate_dims(n);
+            return std::vector<T>(n, value);
+        }
+
+        void check_idx_out_of_range(const core::index idx) const {
+            if (idx >= size()) {
+                throw core::Error(core::ErrorCode::kOutOfBounds, "Vec::at: index out of bounds");
+            }
+        }
+
+        static std::vector<T> check_data(std::vector<T>&& data) {
+            if (data.empty()) {
+                throw core::Error(core::ErrorCode::kInvalidArgument,
+                                  "Vec(data): data must be non-empty");
+            }
+            return std::move(data);
+        }
 
     public:
         // Constructors
-        explicit Vec(std::vector<T>&& data) : data_(std::move(data)) {}
-        explicit Vec(core::index n) : data_(n) {}
-        static Vec ones(core::index n) { return Vec(std::vector<T>(n, T{1})); }
-        static Vec zeros(core::index n) { return Vec(std::vector<T>(n, T{})); }
+        explicit Vec(std::vector<T>&& data) : data_(check_data(std::move(data))) {}
+        explicit Vec(const core::index n) : data_(make_vec(n)) {}
+        static Vec ones(const core::index n) { return Vec(make_vec(n, T{1})); }
+        static Vec zeros(const core::index n) { return Vec(make_vec(n)); }
 
         // Getters
         [[nodiscard]] std::size_t size() const noexcept { return data_.size(); }
@@ -26,6 +51,15 @@ namespace axiom::linalg {
         // Overload Operations
         T& operator[](core::index i) noexcept {return data_[i]; }
         const T& operator[](core::index i) const noexcept { return data_[i]; }
+
+        T& at(core::index i) {
+            check_idx_out_of_range(i);
+            return data_[i];
+        }
+        const T& at(core::index i) const {
+            check_idx_out_of_range(i);
+            return data_[i];
+        }
 
         // Ops
         void resize(core::index n) { data_.resize(n); }
