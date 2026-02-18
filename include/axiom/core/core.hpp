@@ -6,7 +6,7 @@
 
 namespace axiom::core {
 
-    enum class ErrorCode { kInvalidArgument, kShapeMismatch, kOutOfBounds };
+    enum class ErrorCode { kInvalidArgument, kShapeMismatch, kOutOfBounds, kDivideByZero };
 
     class Error final : public std::runtime_error {
     public:

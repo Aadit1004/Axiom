@@ -1,6 +1,11 @@
 #ifndef AXIOM_OPS_HPP
 #define AXIOM_OPS_HPP
 
+#include <limits>
+#include <algorithm>
+#include <numeric>
+#include <concepts>
+
 #include "axiom/core/core.hpp"
 #include "axiom/core/assert.hpp"
 #include "axiom/linalg/vec.hpp"
@@ -17,19 +22,16 @@ namespace axiom::linalg {
  * -unary negation -v
  * -vector norms (L1, L2, infty)
  * -length / lengthSquared
- *
- * TODO:
  * -vector projection
- * -normalize / normalized
- * -cross product (3 dim, 7 dim?)
- * -isApprox(v, w, eps) / isApprox(v, w, eps)
+ * -isApprox(v, w, eps)
+ * -normalize
  * -distance(a,b) / distanceSquared(a,b)
- * -clampLength(maxLen) / SetLength(len) vs clampedLength
+ * -cross product (3 dim)
  * -reflect (v,n) off a normal vector
- * -lerp (a,b,t)
- * - Component-wise min/max: min(a,b), max(a,b)
+ * -Component-wise min/max: min(a,b), max(a,b)
  * - abs(), clamp(), floor/ceil()
  * -sum(), minCoeff(), maxCoeff(), argMin/argMax
+ *
  */
 
     template <typename T>
@@ -45,7 +47,7 @@ namespace axiom::linalg {
 
     template <typename T>
     bool is_orthogonal(const Vec<T>& a, const Vec<T>& b) {
-        return dot(a, b) == 0;
+        return core::nearly_equal(dot(a, b), T{});
     }
 
     template <typename T>
@@ -74,6 +76,179 @@ namespace axiom::linalg {
             sum += xx * xx;
         }
         return sum;
+    }
+
+    template <typename T>
+    Vec<T> proj(const Vec<T>& u, const Vec<T>& v) {
+        // projects u onto v
+        T denom = dot(v, v);
+        if (denom == T{}) {
+            throw core::Error(core::ErrorCode::kDivideByZero,
+                              "proj(u,v): cannot project onto zero vector");
+        }
+        T scalar = dot(u, v) / denom;
+        return scalar * v;
+    }
+
+    template <typename T>
+    bool is_approx(const Vec<T>& v, const Vec<T>&w, T epsilon = std::numeric_limits<T>::epsilon()) {
+       const std::size_t n = v.size();
+        if (n != w.size()) {
+            throw core::Error(core::ErrorCode::kShapeMismatch,
+                "is_approx(): vectors should be of same length");
+        }
+        for (std::size_t i = 0; i < n; ++i) {
+            if (!core::nearly_equal(v[i], w[i], epsilon)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template <typename T>
+    Vec<T> normalize(Vec<T> v) {
+        double len = len(v);
+        if (len == 0.0) throw core::Error(core::ErrorCode::kDivideByZero, "normalize: zero vector");
+        return v / static_cast<T>(len);
+    }
+
+    template <typename T>
+    T distanceSquared(const Vec<T>& a, const Vec<T>& b) {
+        const std::size_t n = a.size();
+        if (n != b.size()) {
+            throw core::Error(core::ErrorCode::kShapeMismatch,
+                "distance(): vectors should be of same length");
+        }
+        T sum{};
+        for (std::size_t i = 0; i < n; ++i) {
+            T diff = a[i] - b[i];
+            sum += (diff * diff);
+        }
+        return sum;
+    }
+
+    template <typename T>
+    double distance(const Vec<T>& a, const Vec<T>& b) {
+        return std::sqrt(static_cast<double>(distanceSquared(a, b)));
+    }
+
+    template <typename T>
+    Vec<T> cross(const Vec<T>& u, const Vec<T>& v) {
+        if (u.size() != 3 || v.size() != 3) {
+            throw core::Error(core::ErrorCode::kShapeMismatch,
+                "cross(): vectors must be of size 3");
+        }
+        Vec<T> out(3);
+        out[0] = (u[1] * v[2]) - (u[2] * v[1]);
+        out[1] = -((u[0] * v[2]) - (u[2] * v[0]));
+        out[2] = (u[0] * v[1]) - (u[1] * v[0]);
+        return out;
+    }
+
+    template <typename T>
+    Vec<T> reflect(const Vec<T>& v, const Vec<T>& n) {
+        return v - 2 * dot(v, n) * n;
+    }
+
+    // component-wise min and max
+    template <typename T, typename Op>
+    Vec<T> cwise_binary(Vec<T> a, const Vec<T>& b, Op op) {
+            const std::size_t n = a.size();
+            if (n != b.size()) {
+                throw core::Error(core::ErrorCode::kShapeMismatch,
+                                  "cwise_binary(): vectors should be of same length");
+            }
+            for (std::size_t i = 0; i < n; ++i) a[i] = op(a[i], b[i]);
+            return a;
+    }
+
+    template <typename T>
+    Vec<T> min(Vec<T> a, const Vec<T>& b) {
+        return cwise_binary(std::move(a), b, [](const T& x, const T& y) {
+            return std::min(x, y);
+        });
+    }
+
+    template <typename T>
+    Vec<T> max(Vec<T> a, const Vec<T>& b) {
+        return cwise_binary(std::move(a), b, [](const T& x, const T& y) {
+            return std::max(x, y);
+        });
+    }
+
+    template <typename T>
+    Vec<T> abs(Vec<T> v) {
+        std::transform(v.begin(), v.end(), v.begin(), [](T x) { return std::abs(x); });
+        return v;
+    }
+
+    template <std::floating_point T>
+    Vec<T> floor(Vec<T> v) {
+        std::transform(v.begin(), v.end(), v.begin(), [](T x) { return std::floor(x); });
+        return v;
+    }
+
+    template <std::floating_point T>
+    Vec<T> ceil(Vec<T> v) {
+        std::transform(v.begin(), v.end(), v.begin(), [](T x) { return std::ceil(x); });
+        return v;
+    }
+
+    template <typename T>
+    Vec<T> clamp(Vec<T> v, const T& low, const T& high) {
+        std::transform(v.begin(), v.end(), v.begin(), [&](T x) {
+            return std::max(low, std::min(high, x));
+        });
+        return v;
+    }
+
+    template <typename T>
+    T sum(const Vec<T>& v) {
+        T sum = std::accumulate(v.begin(), v.end(), T{});
+        return sum;
+    }
+
+    template <typename T>
+    T minCoeff(const Vec<T>& v) {
+        T min = std::accumulate(v.begin(), v.end(), std::numeric_limits<T>::max(), [](T x, T y) {
+            return std::min(x, y);
+        });
+        return min;
+    }
+
+    template <typename T>
+    T maxCoeff(const Vec<T>& v) {
+        T max = std::accumulate(v.begin(), v.end(), std::numeric_limits<T>::lowest(), [](T x, T y) {
+            return std::max(x, y);
+        });
+        return max;
+    }
+
+    // argmin and argmax returns first min element event if not unique
+    template <typename T>
+    core::index argMin(const Vec<T>& v) {
+        core::index idx = 0;
+        T min = std::numeric_limits<T>::max();
+        for (std::size_t i = 0; i < v.size(); ++i) {
+            if (v[i] < min) {
+                min = v[i];
+                idx = i;
+            }
+        }
+        return idx;
+    }
+
+    template <typename T>
+    core::index argMax(const Vec<T>& v) {
+        core::index idx = 0;
+        T max = std::numeric_limits<T>::lowest();
+        for (std::size_t i = 0; i < v.size(); ++i) {
+            if (v[i] > max) {
+                max = v[i];
+                idx = i;
+            }
+        }
+        return idx;
     }
 
 

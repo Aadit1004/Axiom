@@ -3,6 +3,10 @@
     <words>
       <w>cbegin</w>
       <w>cend</w>
+      <w>coeff</w>
+      <w>cwise</w>
+      <w>denom</w>
+      <w>infty</w>
     </words>
   </dictionary>
 </component>

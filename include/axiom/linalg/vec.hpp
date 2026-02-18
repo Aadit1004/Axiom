@@ -67,7 +67,7 @@ namespace axiom::linalg {
         }
 
         T infty_norm() const {
-            T res = -std::numeric_limits<T>::infinity();
+            T res{};
             for (auto x : data_) res = std::max(res, std::abs(x));
             return res;
         }
@@ -99,7 +99,7 @@ namespace axiom::linalg {
         Vec& operator+=(const Vec& rhs) {
             if (size() != rhs.size()) {
                 throw core::Error(core::ErrorCode::kShapeMismatch,
-                    "operator +=: vectors must be of same size");
+                    "vec operator +: vectors must be of same size");
             }
             for (core::index i = 0; i < size(); ++i) data_[i] += rhs[i];
             return *this;
@@ -114,7 +114,7 @@ namespace axiom::linalg {
         Vec& operator-=(const Vec& rhs) {
             if (size() != rhs.size()) {
                 throw core::Error(core::ErrorCode::kShapeMismatch,
-                    "operator +=: vectors must be of same size");
+                    "vec operator -: vectors must be of same size");
             }
             for (core::index i = 0; i < size(); ++i) data_[i] -= rhs[i];
             return *this;
@@ -127,7 +127,7 @@ namespace axiom::linalg {
 
         // scalar multiplication
         Vec& operator*=(const T& val) {
-            for (auto x : data_) x *= val;
+            for (auto& x : data_) x *= val;
             return *this;
         }
 
@@ -136,27 +136,22 @@ namespace axiom::linalg {
             return lhs;
         }
 
-        friend Vec operator*(const T& val, const Vec& rhs) {
+        friend Vec operator*(const T& val, Vec rhs) {
             rhs *= val;
             return rhs;
         }
 
         // scalar division
         Vec& operator/=(const T& val) {
-            if (val == 0) throw core::Error(core::ErrorCode::kInvalidArgument,
-                "operator /=: cannot divide by 0");
-            for (auto x : data_) x /= val;
+            if (val == 0) throw core::Error(core::ErrorCode::kDivideByZero,
+                "vec operator /: cannot divide by 0");
+            for (auto& x : data_) x /= val;
             return *this;
         }
 
         friend Vec operator/(Vec lhs, const T& val) {
             lhs /= val;
             return lhs;
-        }
-
-        friend Vec operator/(const T& val, const Vec& rhs) {
-            rhs /= val;
-            return rhs;
         }
 
         // unary negation for -v
