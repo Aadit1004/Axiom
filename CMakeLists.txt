@@ -3,9 +3,9 @@ project(Axiom LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
-target_compile_definitions(axiom PUBLIC AXIOM_ENABLE_ASSERTS=1)
-
 add_library(axiom STATIC src/axiom/axiom.cpp)
+
+target_compile_definitions(axiom PUBLIC AXIOM_ENABLE_ASSERTS=1)
 
 # Public include directory for consumers of the library
 target_include_directories(axiom PUBLIC
@@ -25,6 +25,5 @@ target_sources(axiom PRIVATE
         include/axiom/opt/linsearch.hpp
 )
 
-# ---- Demo / playground executable ----
 add_executable(Axiom main.cpp)
 target_link_libraries(Axiom PRIVATE axiom)

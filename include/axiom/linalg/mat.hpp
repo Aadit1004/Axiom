@@ -4,6 +4,8 @@
 #include <vector>
 #include <algorithm>
 #include <utility>
+
+#include "axiom/core/assert.hpp"
 #include "axiom/core/core.hpp"
 
 namespace axiom::linalg {
@@ -94,7 +96,10 @@ namespace axiom::linalg {
         [[nodiscard]] std::size_t size() const noexcept { return data_.size(); }
         T* data() noexcept { return data_.data(); }
         const T* data() const noexcept { return data_.data(); }
-        [[nodiscard]] core::index rows() const { return data_.size() / cols_; }
+        [[nodiscard]] core::index rows() const {
+            AXIOM_ASSERT(cols_ != 0, "cols_ must be non-zero");
+            return data_.size() / cols_;
+        }
         [[nodiscard]] core::index cols() const { return cols_; }
 
         // Overload operations

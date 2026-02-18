@@ -4,6 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <utility>
+#include <cmath>
 #include "axiom/core/core.hpp"
 
 namespace axiom::linalg {
@@ -48,6 +49,39 @@ namespace axiom::linalg {
         T* data() noexcept { return data_.data(); }
         const T* data() const noexcept { return data_.data(); }
 
+        // Ops
+        void resize(core::index n) { data_.resize(n); }
+        void resize(core::index n, T val) { data_.resize(n, val); }
+        void fill(const T& val) { std::fill(data_.begin(), data_.end(), val); }
+
+        T l1_norm() const {
+            T res{};
+            for (auto x : data_) res += std::abs(x);
+            return res;
+        }
+
+        [[nodiscard]] double l2_norm() const {
+            long double sum = 0.0;
+            for (const auto x : data_) sum += static_cast<long double>(x) * static_cast<long double>(x);
+            return std::sqrt(static_cast<double>(sum));
+        }
+
+        T infty_norm() const {
+            T res = -std::numeric_limits<T>::infinity();
+            for (auto x : data_) res = std::max(res, std::abs(x));
+            return res;
+        }
+
+        // Iterators
+        using iterator = std::vector<T>::iterator;
+        using const_iterator = std::vector<T>::const_iterator;
+        iterator begin() noexcept { return data_.begin(); }
+        iterator end() noexcept { return data_.end(); }
+        const_iterator begin() const noexcept { return data_.begin(); }
+        const_iterator end() const noexcept { return data_.end(); }
+        const_iterator cbegin() const noexcept { return data_.cbegin(); }
+        const_iterator cend() const noexcept { return data_.cend(); }
+
         // Overload Operations
         T& operator[](core::index i) noexcept {return data_[i]; }
         const T& operator[](core::index i) const noexcept { return data_[i]; }
@@ -61,20 +95,75 @@ namespace axiom::linalg {
             return data_[i];
         }
 
-        // Ops
-        void resize(core::index n) { data_.resize(n); }
-        void resize(core::index n, T val) { data_.resize(n, val); }
-        void fill(const T& val) { std::fill(data_.begin(), data_.end(), val); }
+        // vector addition
+        Vec& operator+=(const Vec& rhs) {
+            if (size() != rhs.size()) {
+                throw core::Error(core::ErrorCode::kShapeMismatch,
+                    "operator +=: vectors must be of same size");
+            }
+            for (core::index i = 0; i < size(); ++i) data_[i] += rhs[i];
+            return *this;
+        }
 
-        // Iterators
-        using iterator = std::vector<T>::iterator;
-        using const_iterator = std::vector<T>::const_iterator;
-        iterator begin() noexcept { return data_.begin(); }
-        iterator end() noexcept { return data_.end(); }
-        const_iterator begin() const noexcept { return data_.begin(); }
-        const_iterator end() const noexcept { return data_.end(); }
-        const_iterator cbegin() const noexcept { return data_.cbegin(); }
-        const_iterator cend() const noexcept { return data_.cend(); }
+        friend Vec operator+(Vec lhs, const Vec& rhs) {
+            lhs += rhs;
+            return lhs;
+        }
+
+        // vector subtraction
+        Vec& operator-=(const Vec& rhs) {
+            if (size() != rhs.size()) {
+                throw core::Error(core::ErrorCode::kShapeMismatch,
+                    "operator +=: vectors must be of same size");
+            }
+            for (core::index i = 0; i < size(); ++i) data_[i] -= rhs[i];
+            return *this;
+        }
+
+        friend Vec operator-(Vec lhs, const Vec& rhs) {
+            lhs -= rhs;
+            return lhs;
+        }
+
+        // scalar multiplication
+        Vec& operator*=(const T& val) {
+            for (auto x : data_) x *= val;
+            return *this;
+        }
+
+        friend Vec operator*(Vec lhs, const T& val) {
+            lhs *= val;
+            return lhs;
+        }
+
+        friend Vec operator*(const T& val, const Vec& rhs) {
+            rhs *= val;
+            return rhs;
+        }
+
+        // scalar division
+        Vec& operator/=(const T& val) {
+            if (val == 0) throw core::Error(core::ErrorCode::kInvalidArgument,
+                "operator /=: cannot divide by 0");
+            for (auto x : data_) x /= val;
+            return *this;
+        }
+
+        friend Vec operator/(Vec lhs, const T& val) {
+            lhs /= val;
+            return lhs;
+        }
+
+        friend Vec operator/(const T& val, const Vec& rhs) {
+            rhs /= val;
+            return rhs;
+        }
+
+        // unary negation for -v
+        friend Vec operator-(Vec v) {
+            for (auto& x : v.data_) x = -x;
+            return v;
+        }
 
     };
 }

@@ -1,6 +1,9 @@
 #ifndef AXIOM_ASSERT_HPP
 #define AXIOM_ASSERT_HPP
 
+#include <iostream>
+#include <cstdlib>
+
 // can override w/ AXIOM_ENABLE_ASSERTS=1/0 in CMake
 #ifndef AXIOM_ENABLE_ASSERTS
   #ifndef NDEBUG
