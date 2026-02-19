@@ -62,7 +62,7 @@ namespace axiom::linalg {
 
         [[nodiscard]] double l2_norm() const {
             long double sum = 0.0;
-            for (const auto x : data_) sum += static_cast<long double>(x) * static_cast<long double>(x);
+            for (const auto x : data_) sum += core::sq(static_cast<long double>(x));
             return std::sqrt(static_cast<double>(sum));
         }
 

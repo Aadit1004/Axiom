@@ -73,7 +73,7 @@ namespace axiom::linalg {
         long double sum = 0.0L;
         for (const auto& x : v) {
             const auto xx = static_cast<long double>(x);
-            sum += xx * xx;
+            sum += core::sq(xx);
         }
         return sum;
     }
@@ -122,7 +122,7 @@ namespace axiom::linalg {
         T sum{};
         for (std::size_t i = 0; i < n; ++i) {
             T diff = a[i] - b[i];
-            sum += (diff * diff);
+            sum += core::sq(diff);
         }
         return sum;
     }
@@ -197,7 +197,7 @@ namespace axiom::linalg {
     template <typename T>
     Vec<T> clamp(Vec<T> v, const T& low, const T& high) {
         std::transform(v.begin(), v.end(), v.begin(), [&](T x) {
-            return std::max(low, std::min(high, x));
+            return core::clamp(low, high, x);
         });
         return v;
     }

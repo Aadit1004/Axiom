@@ -32,7 +32,7 @@ namespace axiom::core {
         return std::max(lo, std::min(hi, v));
     }
 
-    template <typename T>
+    template <std::floating_point T>
     constexpr bool nearly_equal(T a, T b, T epsilon = std::numeric_limits<T>::epsilon()) {
         return std::abs(a - b) < epsilon;
     }

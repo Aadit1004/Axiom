@@ -25,5 +25,26 @@ target_sources(axiom PRIVATE
         include/axiom/opt/linsearch.hpp
 )
 
-add_executable(Axiom main.cpp)
-target_link_libraries(Axiom PRIVATE axiom)
+# Catch2 linking
+Include(FetchContent)
+FetchContent_Declare(
+        Catch2
+        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+        GIT_TAG        v3.8.1
+)
+FetchContent_MakeAvailable(Catch2)
+
+add_executable(AxiomApp main.cpp)
+target_link_libraries(AxiomApp PRIVATE axiom)
+
+file(GLOB_RECURSE AXIOM_TEST_SOURCES CONFIGURE_DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/axiom/*.cpp
+)
+add_executable(AxiomTests ${AXIOM_TEST_SOURCES})
+target_link_libraries(AxiomTests PRIVATE axiom Catch2::Catch2WithMain)
+
+include(CTest)
+enable_testing()
+
+include(Catch)
+catch_discover_tests(AxiomTests)
